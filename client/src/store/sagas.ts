@@ -9,8 +9,9 @@ import {
 } from "ethers";
 
 import apolloClient from "../apollo/client";
-import { Actions } from "../types";
+import { Actions, SendTransactionData } from "../types";
 import { SaveTransaction } from "../queries";
+import { navigate } from "../components/NaiveRouter";
 
 function* sendTransaction() {
   const provider = new JsonRpcProvider("http://localhost:8545");
@@ -30,7 +31,7 @@ function* sendTransaction() {
 
   const transaction = {
     to: randomAddress(),
-    value: 0,
+    value: 1,
   };
 
   try {
@@ -54,12 +55,14 @@ function* sendTransaction() {
       },
     };
 
-    yield apolloClient.mutate({
+    const result: SendTransactionData = yield apolloClient.mutate({
       mutation: SaveTransaction,
       variables,
     });
+
+    navigate(`./transaction/${result.data.addTransaction.hash}`);
   } catch (error) {
-    console.error("SAGA", error);
+    console.error(error);
   }
 }
 
