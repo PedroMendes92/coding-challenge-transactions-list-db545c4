@@ -30,12 +30,13 @@ function* sendTransaction() {
 
   const transaction = {
     to: randomAddress(),
-    value: 1000000000000000000,
+    value: 0,
   };
 
   try {
-    const txResponse: TransactionResponse =
-      yield signer.sendTransaction(transaction);
+    const txResponse: TransactionResponse = yield signer.sendTransaction(
+      transaction
+    );
     const response: TransactionReceipt = yield txResponse.wait();
 
     const receipt: Transaction = yield response.getTransaction();
@@ -58,7 +59,7 @@ function* sendTransaction() {
       variables,
     });
   } catch (error) {
-    //
+    console.error("SAGA", error);
   }
 }
 
