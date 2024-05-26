@@ -53,8 +53,8 @@ function* sendTransaction(data: any) {
       type: Actions.TransactionSuccessful,
       payload: result.data.addTransaction,
     });
-    navigate(`/transaction/${result.data.addTransaction.hash}`);
   } catch (error) {
+    console.error(error);
     yield put({ type: Actions.TransactionFailed });
   }
 }

@@ -7,6 +7,7 @@ import * as yup from "yup";
 
 import { Actions, SendTransactionData } from "../types";
 import { RootState, TransactionState } from "../store/reducers";
+import { navigate } from "./NaiveRouter";
 
 const schema = yup
   .object({
@@ -65,8 +66,11 @@ const SendTransaction: React.FC = () => {
     if (state === TransactionState.SUCCESSFUL && closeButtonRef.current) {
       closeButtonRef.current.click();
       dispatch({ type: Actions.TransactionIdle });
+      if (transactions.length) {
+        navigate(`/transaction/${transactions.at(-1)?.hash}`);
+      }
     }
-  }, [state, closeButtonRef, dispatch]);
+  }, [state, closeButtonRef, dispatch, transactions]);
 
   return (
     <>

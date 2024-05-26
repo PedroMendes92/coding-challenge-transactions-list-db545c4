@@ -1,13 +1,25 @@
 import React from "react";
 import { useQuery } from "@apollo/client";
 import { GetAllTransactions } from "../queries";
-import { TransactionsData } from "../types";
+import { Actions, TransactionsData } from "../types";
 import { navigate } from "./NaiveRouter";
-import { formatEther } from "ethers";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store/reducers";
 
 const TransactionList: React.FC = () => {
-  const { loading, error, data } =
-    useQuery<TransactionsData>(GetAllTransactions);
+  const dispatch = useDispatch();
+  const data = useSelector((state: RootState) => state.transactions);
+  console.log(data);
+  const { loading, error } = useQuery<TransactionsData>(GetAllTransactions, {
+    skip: !!data.length,
+    onCompleted: (data) => {
+      console.log("ON COMPLETE", { data });
+      dispatch({
+        type: Actions.InitTransactions,
+        payload: data.getAllTransactions,
+      });
+    },
+  });
 
   const handleNavigate = (hash: string) => navigate(`/transaction/${hash}`);
 
@@ -30,21 +42,20 @@ const TransactionList: React.FC = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col mt-20">
       <div className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between">
         <div className="p-1.5 min-w-full inline-block align-middle">
-          {!!data?.getAllTransactions?.length ? (
+          {!!data.length ? (
             <>
-              {data.getAllTransactions.map(({ hash, to, from, value }) => (
+              {data.map(({ hash, to, from, value }) => (
                 <div
                   key={hash}
                   className="bg-white shadow-sm p-4 md:p-5 border rounded border-gray-300 mt-3 hover:border-blue-500 cursor-pointer"
                   onClick={() => handleNavigate(hash)}
                 >
-                  <span className="font-bold">{formatEther(value)} ETH</span>{" "}
-                  sent from <span className="font-bold">{from}</span> to{" "}
+                  <span className="font-bold">{value} ETH</span> sent from{" "}
+                  <span className="font-bold">{from}</span> to{" "}
                   <span className="font-bold">{to}</span>
                 </div>
               ))}

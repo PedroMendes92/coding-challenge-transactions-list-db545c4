@@ -33,6 +33,13 @@ export const GetSingleTransaction = gql`
 export const SaveTransaction = gql`
   mutation SaveTransaction($transaction: TransactionInput!) {
     addTransaction(transaction: $transaction) {
+      gasLimit
+      gasPrice
+      to
+      from
+      value
+      data
+      chainId
       hash
     }
   }

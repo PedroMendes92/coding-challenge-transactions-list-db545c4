@@ -3,6 +3,8 @@ import { useQuery } from "@apollo/client";
 import { GetSingleTransaction } from "../queries";
 import { SingleTransactionData } from "../types";
 import { navigate } from "./NaiveRouter";
+import { useSelector } from "react-redux";
+import { RootState } from "../store/reducers";
 
 interface SingleTransactionProps {
   id: string | null;
@@ -10,33 +12,21 @@ interface SingleTransactionProps {
 
 const SingleTransaction: React.FC<SingleTransactionProps> = ({ id }) => {
   const handleGoBack = () => navigate(`/transactions`);
+  const transactions = useSelector((state: RootState) => state.transactions);
 
-  const { loading, error, data } = useQuery<SingleTransactionData>(
-    GetSingleTransaction,
-    { variables: { hash: id } },
-  );
+  const t = transactions.find((t) => t.hash === id);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col mt-20">
-        <div className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between">
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+  if (!t) {
     return (
       <div className="flex flex-col mt-20">
         <div className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between text-red-600 font-bold">
-          Error: {error.message}
+          Error: Transaction doesn't exist
         </div>
       </div>
     );
   }
 
-  const { hash, to, from, value } = data?.getTransaction || {};
+  const { hash, to, from, value } = t;
 
   return (
     <div>

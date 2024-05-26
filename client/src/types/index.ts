@@ -35,6 +35,7 @@ export type Action<P> = {
 };
 
 export enum Actions {
+  InitTransactions = "INIT_TRANSACTIONS",
   SendTransaction = "SEND_TRANSACTION",
   ChangeAccount = "CHANGE_ACCOUNT",
   StartTransaction = "START_TRANSACTION",
