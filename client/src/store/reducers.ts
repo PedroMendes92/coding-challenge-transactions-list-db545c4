@@ -26,7 +26,6 @@ const reducer: Reducer = (state = initialState, action): RootState => {
   switch (action.type) {
     // Define your actions
     case Actions.ChangeAccount:
-      console.log(action, action.payload);
       return {
         ...state,
         currentAccount: action.payload,
@@ -36,7 +35,6 @@ const reducer: Reducer = (state = initialState, action): RootState => {
     case Actions.TransactionFailed:
       return { ...state, transactionState: TransactionState.FAILED };
     case Actions.TransactionSuccessful:
-      console.log("Adding tx", action.payload);
       return {
         ...state,
         transactionState: TransactionState.SUCCESSFUL,

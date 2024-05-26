@@ -68,8 +68,6 @@ const SendTransaction: React.FC = () => {
     }
   }, [state, closeButtonRef, dispatch]);
 
-  console.log({ state, transactions, account });
-
   return (
     <>
       <button
