@@ -23,7 +23,7 @@ export interface SingleTransactionData {
   getTransaction: Transaction;
 }
 
-export interface SendTransactionData {
+export interface AddTransactionData {
   data: {
     addTransaction: Transaction;
   };
@@ -36,4 +36,15 @@ export type Action<P> = {
 
 export enum Actions {
   SendTransaction = "SEND_TRANSACTION",
+  ChangeAccount = "CHANGE_ACCOUNT",
+  StartTransaction = "START_TRANSACTION",
+  TransactionIdle = "IDLE_TRANSACTION",
+  TransactionFailed = "FAILED_TRANSACTION",
+  TransactionSuccessful = "SUCCESSFUL_TRANSACTION",
 }
+
+export type SendTransactionData = {
+  amount: number;
+  sender: string;
+  recipient: string;
+};

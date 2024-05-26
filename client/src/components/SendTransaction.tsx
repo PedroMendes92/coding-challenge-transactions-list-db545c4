@@ -1,20 +1,74 @@
-import React, { useCallback } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 
-import { Actions } from "../types";
+import * as yup from "yup";
+
+import { Actions, SendTransactionData } from "../types";
+import { RootState, TransactionState } from "../store/reducers";
+
+const schema = yup
+  .object({
+    amount: yup
+      .number()
+      .required("Provide an amount")
+      .test({
+        test: (value) => value > 0,
+        message: "Value must be positive",
+      }),
+    recipient: yup
+      .string()
+      .required("Provide a recipient account address")
+      .matches(/0x([a-f0-9]){40}/i, {
+        message:
+          "Address must start with 0x followed from 40 characters 0-9a-fA-F",
+      }),
+    sender: yup
+      .string()
+      .required("Provide your account account address")
+      .matches(/0x([a-f0-9]){40}/i, {
+        message:
+          "Address must start with 0x followed from 40 characters 0-9a-fA-F",
+      }),
+  })
+  .required();
 
 const SendTransaction: React.FC = () => {
   const dispatch = useDispatch();
-  const { handleSubmit } = useForm();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const account = useSelector((state: RootState) => state.currentAccount);
+  const transactions = useSelector((state: RootState) => state.transactions);
+  const state = useSelector((state: RootState) => state.transactionState);
 
-  const onSubmit = (data: any) => console.log(data);
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    getValues,
+  } = useForm<SendTransactionData>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      sender: account || "",
+      amount: 0,
+    },
+  });
 
-  const handleDispatch = useCallback(() => {
+  const onSubmit = () => {
+    dispatch({ type: Actions.StartTransaction });
     dispatch({
       type: Actions.SendTransaction,
+      payload: getValues(),
     });
-  }, [dispatch]);
+  };
+  useEffect(() => {
+    if (state === TransactionState.SUCCESSFUL && closeButtonRef.current) {
+      closeButtonRef.current.click();
+      dispatch({ type: Actions.TransactionIdle });
+    }
+  }, [state, closeButtonRef, dispatch]);
+
+  console.log({ state, transactions, account });
 
   return (
     <>
@@ -38,6 +92,7 @@ const SendTransaction: React.FC = () => {
                 </h3>
                 <button
                   type="button"
+                  ref={closeButtonRef}
                   className="hs-dropdown-toggle inline-flex flex-shrink-0 justify-center items-center h-8 w-8 rounded-md text-gray-500 hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-white transition-all text-sm"
                   data-hs-overlay="#hs-basic-modal"
                 >
@@ -70,23 +125,27 @@ const SendTransaction: React.FC = () => {
                 <input
                   type="text"
                   id="input-sender"
-                  className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
+                  {...register("sender")}
+                  className="opacity-70  py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
                   placeholder="Sender Address (Autocompleted)"
-                  disabled
                 />
+                {errors.sender && <span>{errors.sender.message}</span>}
                 <label
                   htmlFor="input-recipient"
                   className="block text-sm font-bold my-2"
                 >
-                  Recipient:
+                  Recipient:{" "}
                 </label>
                 <input
                   type="text"
                   id="input-recipient"
-                  className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
+                  {...register("recipient", {
+                    required: "Provide a valid account address",
+                  })}
+                  className="opacity-70  py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
                   placeholder="Recipient Address"
-                  disabled
                 />
+                {errors.recipient && <span>{errors.recipient.message}</span>}
                 <label
                   htmlFor="input-amount"
                   className="block text-sm font-bold my-2"
@@ -94,14 +153,18 @@ const SendTransaction: React.FC = () => {
                   Amount:
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="input-amount"
-                  className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
+                  {...register("amount")}
+                  className="opacity-70  py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
                   placeholder="Amount"
-                  disabled
                 />
+                {errors.amount && <span>{errors.amount.message}</span>}
               </div>
               <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t">
+                {state === TransactionState.FAILED && (
+                  <span>Transaction failed!</span>
+                )}
                 <button
                   type="button"
                   className="hs-dropdown-toggle py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm"
@@ -110,8 +173,7 @@ const SendTransaction: React.FC = () => {
                   Close
                 </button>
                 <button
-                  type="button"
-                  onClick={handleDispatch}
+                  type="submit"
                   className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent font-semibold bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-sm"
                 >
                   Send

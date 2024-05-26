@@ -1,8 +1,11 @@
-import React, { useCallback, useState } from "react";
-import Onboard, { WalletState } from "@web3-onboard/core";
+import React, { useCallback } from "react";
+import Onboard from "@web3-onboard/core";
 import injectedModule from "@web3-onboard/injected-wallets";
+import { useDispatch, useSelector } from "react-redux";
 
 import SendTransaction from "./SendTransaction";
+import { Actions } from "../types";
+import { RootState } from "../store/reducers";
 
 const onboard = Onboard({
   wallets: [injectedModule()],
@@ -17,18 +20,19 @@ const onboard = Onboard({
 });
 
 const Navigation: React.FC = () => {
-  const [wallet, setWallet] = useState<WalletState>();
+  const dispatch = useDispatch();
+  const account = useSelector((state: RootState) => state.currentAccount);
 
   const handleConnect = useCallback(async () => {
     const wallets = await onboard.connectWallet();
 
     const [metamaskWallet] = wallets;
 
-    if (
-      metamaskWallet.label === "MetaMask" &&
-      metamaskWallet.accounts[0].address
-    ) {
-      setWallet(metamaskWallet);
+    if (metamaskWallet.label === "MetaMask" && metamaskWallet.accounts[0]) {
+      dispatch({
+        type: Actions.ChangeAccount,
+        payload: metamaskWallet.accounts[0].address,
+      });
     }
   }, []);
 
@@ -45,15 +49,15 @@ const Navigation: React.FC = () => {
         </div>
         <div className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:block">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-end sm:mt-0 sm:pl-5">
-            {wallet && (
+            {account && (
               <>
                 <SendTransaction />
                 <p className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border-2 border-gray-200 font-semibold text-gray-200 text-sm">
-                  {wallet.accounts[0].address}
+                  {account}
                 </p>
               </>
             )}
-            {!wallet && (
+            {!account && (
               <button
                 type="button"
                 onClick={handleConnect}
