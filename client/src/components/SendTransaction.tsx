@@ -65,8 +65,10 @@ const SendTransaction: React.FC = () => {
   useEffect(() => {
     if (state === TransactionState.SUCCESSFUL && closeButtonRef.current) {
       closeButtonRef.current.click();
+      //this dispatch need to be inside a useEffect otherwise it throws an error
       dispatch({ type: Actions.TransactionIdle });
       if (transactions.length) {
+        //Navigate to the last transaction when state is successful
         navigate(`/transaction/${transactions.at(-1)?.hash}`);
       }
     }
